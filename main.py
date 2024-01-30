@@ -1,7 +1,5 @@
-import cv2
 import streamlit as st
-import numpy as np
-import tempfile
+import cv2
 import os
 
 def enhance_video(input_file, output_file):
@@ -11,46 +9,41 @@ def enhance_video(input_file, output_file):
         st.error("Gagal membuka video")
         return
 
-    width = int(cap.get(3))
-    height = int(cap.get(4))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    frame_fps = cap.get(cv2.CAP_PROP_FPS)
 
-    # Use the MP4V codec for MP4 output
-    fourcc = cv2.VideoWriter_fourcc(*'MP4V')
-    out = cv2.VideoWriter(output_file, fourcc, 20.0, (width, height))
+    # Use MP4V codec directly for MP4 output
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(output_file, fourcc, frame_fps, (width, height), isColor=False)
 
-    while cap.isOpened():
+    while True:
         ret, frame = cap.read()
 
         if not ret:
             break
 
-        enhanced_frame = cv2.flip(frame, 0)
-
-        out.write(enhanced_frame)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        out.write(gray)
 
     cap.release()
     out.release()
 
-if __name__ == "__main__":
-    st.title("Enhance Video App")
+st.title("Enhance Video App")
 
-    uploaded_file = st.file_uploader("Pilih video untuk ditingkatkan", type=["mp4", "avi"])
+video_data = st.file_uploader("Upload file", ['mp4', 'mov', 'avi'])
 
-    if uploaded_file is not None:
-        # Simpan video sementara sebagai file lokal
-        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-            temp_file.write(uploaded_file.read())
-            video_path = temp_file.name
+if video_data:
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(video_data.getvalue())
+        video_path = temp_file.name
 
-        # Tampilkan video yang diunggah
         st.video(video_path)
 
-        output_file = 'enhanced_video.mp4'  # Change the output filename to .mp4
+        output_file = 'enhanced_video.mp4'
         enhance_video(video_path, output_file)
 
-        # Hapus file sementara setelah video ditingkatkan
-        os.remove(video_path)
+        os.remove(video_path)  # Remove temporary file
 
         st.success("Video telah ditingkatkan.")
-        # Tampilkan video yang telah ditingkatkan di bawah pesan sukses
-        st.video(output_file)
+        st.video(output_file)  # Display the enhanced MP4 video
