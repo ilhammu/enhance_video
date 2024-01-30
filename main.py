@@ -50,4 +50,7 @@ if __name__ == "__main__":
         # Hapus file sementara setelah video ditingkatkan
         os.remove(video_path)
 
-        st.success(f"Video telah ditingkatkan. Silakan unduh [di sini](enhanced_video.avi).")
+        st.success("Video telah ditingkatkan.")
+        
+        # Tampilkan video yang telah ditingkatkan di bawah pesan sukses
+        st.video(output_file)
