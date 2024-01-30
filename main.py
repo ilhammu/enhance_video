@@ -1,113 +1,47 @@
 import streamlit as st
 import cv2
-import subprocess
+import numpy as np
+from io import BytesIO
+import base64
 
-video_data = st.file_uploader("Upload file", ['mp4','mov', 'avi'])
+st.title('Video Quality Enhancement')
 
-temp_file_to_save = './temp_file_1.mp4'
-temp_file_result  = './temp_file_2.mp4'
+# Upload a video file
+video_file = st.file_uploader("Upload a video", type=["mp4"])
 
-# func to save BytesIO on a drive
-def write_bytesio_to_file(filename, bytesio):
-    """
-    Write the contents of the given BytesIO to a file.
-    Creates the file or overwrites the file if it does not exist yet.
-    """
-    with open(filename, "wb") as f:
-        f.write(bytesio.getbuffer())
+if video_file is not None:
+    # Read the uploaded video
+    video_bytes = video_file.read()
 
-def enhance_video_quality(input_file, output_file):
-    cap = cv2.VideoCapture(input_file)
+    # Perform video enhancement (e.g., using OpenCV)
+    cap = cv2.VideoCapture(BytesIO(video_bytes))
 
-    if not cap.isOpened():
-        st.error("Gagal membuka video")
-        return
-
-    width = int(cap.get(3))
-    height = int(cap.get(4))
-
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter(output_file, fourcc, 20.0, (width, height))
+    # Define the codec and create VideoWriter object
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter('output.mp4', fourcc, 20.0, (640, 360))
 
     while cap.isOpened():
         ret, frame = cap.read()
-
         if not ret:
             break
+        # Apply enhancement operations (e.g., denoising, color correction, sharpening) to the frame
+        # For example, you can perform simple grayscale conversion and edge detection
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        edges = cv2.Canny(gray, 100, 200)
+        frame = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
 
-        # Proses peningkatan kualitas di sini
-        # Misalnya, lakukan operasi pengolahan gambar seperti sharpening atau konversi warna
-
+        # Write the enhanced frame to the output video
         out.write(frame)
 
+    # Release everything if job is finished
     cap.release()
     out.release()
 
-if video_data is not None:
-    write_bytesio_to_file(temp_file_to_save, video_data)
+    # Read the enhanced video file
+    with open('output.mp4', 'rb') as file:
+        enhanced_video_bytes = file.read()
 
-    # Peningkatan kualitas video
-    enhance_video_quality(temp_file_to_save, temp_file_result)
+    st.video(enhanced_video_bytes)
 
-    # Convert video to H264 format using ffmpeg
-    subprocess.run(['ffmpeg', '-i', temp_file_result, '-c:v', 'libx264', temp_file_result])
-
-    # Display the enhanced video
-    st.video(temp_file_result)
-import streamlit as st
-import cv2
-import subprocess
-
-video_data = st.file_uploader("Upload file", ['mp4','mov', 'avi'], key="file_uploader1")
-
-
-temp_file_to_save = './temp_file_1.mp4'
-temp_file_result  = './temp_file_2.mp4'
-
-# func to save BytesIO on a drive
-def write_bytesio_to_file(filename, bytesio):
-    """
-    Write the contents of the given BytesIO to a file.
-    Creates the file or overwrites the file if it does not exist yet.
-    """
-    with open(filename, "wb") as f:
-        f.write(bytesio.getbuffer())
-
-def enhance_video_quality(input_file, output_file):
-    cap = cv2.VideoCapture(input_file)
-
-    if not cap.isOpened():
-        st.error("Gagal membuka video")
-        return
-
-    width = int(cap.get(3))
-    height = int(cap.get(4))
-
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter(output_file, fourcc, 20.0, (width, height))
-
-    while cap.isOpened():
-        ret, frame = cap.read()
-
-        if not ret:
-            break
-
-        # Proses peningkatan kualitas di sini
-        # Misalnya, lakukan operasi pengolahan gambar seperti sharpening atau konversi warna
-
-        out.write(frame)
-
-    cap.release()
-    out.release()
-
-if video_data is not None:
-    write_bytesio_to_file(temp_file_to_save, video_data)
-
-    # Peningkatan kualitas video
-    enhance_video_quality(temp_file_to_save, temp_file_result)
-
-    # Convert video to H264 format using ffmpeg
-    subprocess.run(['ffmpeg', '-i', temp_file_result, '-c:v', 'libx264', temp_file_result])
-
-    # Display the enhanced video
-    st.video(temp_file_result)
+    # Cleanup temporary files
+    os.remove('output.mp4')
