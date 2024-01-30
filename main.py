@@ -14,7 +14,8 @@ def enhance_video(input_file, output_file):
     width = int(cap.get(3))
     height = int(cap.get(4))
 
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    # Use the MP4V codec for MP4 output
+    fourcc = cv2.VideoWriter_fourcc(*'MP4V')
     out = cv2.VideoWriter(output_file, fourcc, 20.0, (width, height))
 
     while cap.isOpened():
@@ -44,13 +45,12 @@ if __name__ == "__main__":
         # Tampilkan video yang diunggah
         st.video(video_path)
 
-        output_file = 'enhanced_video.avi'
+        output_file = 'enhanced_video.mp4'  # Change the output filename to .mp4
         enhance_video(video_path, output_file)
 
         # Hapus file sementara setelah video ditingkatkan
         os.remove(video_path)
 
         st.success("Video telah ditingkatkan.")
-        
         # Tampilkan video yang telah ditingkatkan di bawah pesan sukses
         st.video(output_file)
