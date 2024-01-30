@@ -58,7 +58,8 @@ import streamlit as st
 import cv2
 import subprocess
 
-video_data = st.file_uploader("Upload file", ['mp4','mov', 'avi'])
+video_data = st.file_uploader("Upload file", ['mp4','mov', 'avi'], key="file_uploader1")
+
 
 temp_file_to_save = './temp_file_1.mp4'
 temp_file_result  = './temp_file_2.mp4'
