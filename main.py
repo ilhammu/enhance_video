@@ -3,6 +3,7 @@ import streamlit as st
 import numpy as np
 import tempfile
 import os
+import requests
 
 def enhance_video(input_file, output_file):
     cap = cv2.VideoCapture(input_file)
@@ -30,11 +31,17 @@ def enhance_video(input_file, output_file):
     cap.release()
     out.release()
 
+def upload_to_tmpfiles(video_path):
+    url = "https://tmpfiles.org/api/v1/upload"
+    files = {'file': open(video_path, 'rb')}
+    response = requests.post(url, files=files)
+    return response.json()['url']
+
 if __name__ == "__main__":
     st.title("Enhance Video App")
 
     uploaded_file = st.file_uploader("Pilih video untuk ditingkatkan", type=["mp4", "avi"])
-
+    st.info('Maksimal video yang dapat diunggah 100MB')
     if uploaded_file is not None:
         # Simpan video sementara sebagai file lokal
         with tempfile.NamedTemporaryFile(delete=False) as temp_file:
@@ -52,5 +59,8 @@ if __name__ == "__main__":
 
         st.success("Video telah ditingkatkan.")
         
-        # Tampilkan video yang telah ditingkatkan di bawah pesan sukses
-        st.video(output_file)
+        # Unggah video yang telah ditingkatkan ke tmpfiles.org
+        enhanced_video_url = upload_to_tmpfiles(output_file)
+
+        # Tampilkan video yang telah ditingkatkan dari tmpfiles.org
+        st.video(enhanced_video_url)
