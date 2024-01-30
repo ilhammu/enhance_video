@@ -14,13 +14,11 @@ if video_file is not None:
     video_bytes = video_file.read()
 
     # Perform video enhancement (e.g., using OpenCV)
-    cap = cv2.VideoCapture(BytesIO(video_bytes))
+    video_nparray = np.frombuffer(video_bytes, np.uint8)
+    frame_array = []
+    cap = cv2.VideoCapture(video_nparray.tobytes())
 
-    # Define the codec and create VideoWriter object
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter('output.mp4', fourcc, 20.0, (640, 360))
-
-    while cap.isOpened():
+    while True:
         ret, frame = cap.read()
         if not ret:
             break
@@ -30,18 +28,20 @@ if video_file is not None:
         edges = cv2.Canny(gray, 100, 200)
         frame = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
 
-        # Write the enhanced frame to the output video
-        out.write(frame)
+        frame_array.append(frame)
 
-    # Release everything if job is finished
-    cap.release()
+    # Write the enhanced frames to a new video file
+    height, width, _ = frame_array[0].shape
+    out = cv2.VideoWriter('output.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 30, (width, height))
+    for i in range(len(frame_array)):
+        out.write(frame_array[i])
     out.release()
 
     # Read the enhanced video file
     with open('output.mp4', 'rb') as file:
         enhanced_video_bytes = file.read()
 
-    st.video(enhanced_video_bytes)
+    st.video(enhanced_video_bytes, format='video/mp4')
 
     # Cleanup temporary files
     os.remove('output.mp4')
